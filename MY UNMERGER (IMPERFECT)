@@ -1,0 +1,41 @@
+#note: This one is mine!! (though I realise it's not perfect, but outlook is difficult and this is the best solution i was able to come up with
+
+Public Sub UnmergeConversations()
+    Dim Sel As Outlook.Selection
+    Dim obj As Object
+    Dim i As Long
+    Dim NewSubject As String
+    
+    ' Get the selected items in the Outlook Explorer
+    Set Sel = Application.ActiveExplorer.Selection
+    
+    ' Prompt user for the new subject for the forwarded items
+    NewSubject = InputBox("Enter the new subject for the forwarded items:", "New Subject", Sel(1).Subject)
+    
+    ' Iterate through each selected item and forward it to inbox
+    For i = 1 To Sel.Count
+        Set obj = Sel(i)
+        ForwardToInbox obj, NewSubject
+    Next i
+End Sub
+
+Private Sub ForwardToInbox(Item As Object, NewSubject As String)
+    Dim ForwardedItem As Outlook.MailItem
+    
+    ' Create a new mail item
+    Set ForwardedItem = Application.CreateItem(olMailItem)
+    
+    ' Set properties for the forwarded item
+    ForwardedItem.Subject = NewSubject
+    ForwardedItem.Body = Item.Body
+    
+    ' Save the forwarded item to the inbox
+    ForwardedItem.Save
+    ForwardedItem.Move Application.GetNamespace("MAPI").GetDefaultFolder(olFolderInbox)
+    
+    ' Delete the selected item from the old chain
+    Item.Delete
+    
+    ' Clean up
+    Set ForwardedItem = Nothing
+End Sub
