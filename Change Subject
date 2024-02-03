@@ -1,0 +1,61 @@
+#THIS IS NOT MY IP OR MY CREATION; WAS FOUND ON PUBLIC FORUM, AND STORED HERE FOR ARCHIVAL PURPOSES
+
+Sub ChangeConversation()
+
+On Error GoTo ErrHnd:
+
+        Dim oNS As Object
+        Dim oRDOSess As Object
+        Dim oRDOItem As Object
+        Dim sEntryID As String
+        Dim sStoreID As String
+        Dim lNumMsgs As Long
+        Dim sNewConv As String
+        Dim sTmp As String
+        Set oRDOSess = CreateObject("Redemption.RDOSession")
+        Set oNS = Nothing
+        Set oNS = Outlook.GetNamespace("MAPI")
+        oNS.Logon
+        oRDOSess.MAPIOBJECT = oNS.MAPIOBJECT
+        lNumMsgs = Outlook.ActiveExplorer.Selection.Count
+
+        If lNumMsgs < 1 Then
+                GoTo Instructions:
+        End If
+        sNewConv = InputBox("Change the Conversation ID to:", "Change Conversation ID", "subject")
+        If sNewConv = "" Then
+                GoTo Instructions:
+        End If
+        For i = 1 To lNumMsgs
+                With Outlook.ActiveExplorer.Selection(i)
+                        strEntryID = .EntryID
+                        strStoreID = .Parent.StoreID
+                End With
+                Set objRDOItem = oRDOSess.GetMessageFromID(strEntryID, strStoreID)
+                If UCase(sNewConv) = "SUBJECT" Then
+                        sTmp = Outlook.ActiveExplorer.Selection.Item(i).Subject
+                        sTmp = Replace(Replace(Replace(Replace(Replace(Replace(sTmp, "RE: ", ""), "FWD: ", ""), "FW: ", ""), "Re: ", ""), "Fw: ", ""), "Fwd: ", "")
+                        objRDOItem.ConversationTopic = sTmp
+                Else
+                        objRDOItem.ConversationTopic = sNewConv
+                End If
+                objRDOItem.Save
+        Next i
+        GoTo ErrHnd:
+
+Instructions:
+        
+        MsgBox ("To change a conversation ID, select the message(s) then run this macro. Enter the new ID, and click OK. NOTE: To change the conversation to the default (to match the subject), enter the word 'subject' as the new ID.")
+
+ErrHnd:
+
+        Set oNS = Nothing
+        Set oRDOSess = Nothing
+        Set objRDOItem = Nothing
+        Set strEntryID = Nothing
+        Set strStoreID = Nothing
+        lNumMsgs = 0
+        sNewConv = ""
+        sTmp = ""
+
+End Sub
