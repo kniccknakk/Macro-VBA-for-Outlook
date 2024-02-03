@@ -1,0 +1,59 @@
+Private m_Session As Object
+
+Public Sub MergeConversation()
+    Dim Sel As Outlook.Selection
+    Dim obj As Object
+    Dim Parent As Redemption.RDOMail
+    Dim Mail As Redemption.RDOMail
+    Dim i As Long
+    Dim KeepOriginalSubject As Boolean
+    Dim Subject As String
+
+    KeepOriginalSubject = True
+
+    Set m_Session = CreateObject("redemption.rdosession")
+    m_Session.MAPIOBJECT = Application.Session.MAPIOBJECT
+
+    ' Check if there's an active inspector
+    If Not Application.ActiveInspector Is Nothing Then
+        ' Check if the active inspector has a selected item
+        If Not Application.ActiveInspector.CurrentItem Is Nothing Then
+            Set obj = Application.ActiveInspector.CurrentItem
+            Set Parent = GetRdoMessage(obj)
+
+            Set Sel = Application.ActiveExplorer.Selection
+            For i = 1 To Sel.Count
+                Set obj = Sel(i)
+                Set Mail = GetRdoMessage(obj)
+                Subject = Mail.Subject
+                Mail.CreateConversationIndex Parent
+                If KeepOriginalSubject Then
+                    Mail.Subject = Subject
+                End If
+                Mail.Save
+            Next
+        Else
+            MsgBox "No item is selected in the inspector."
+        End If
+    Else
+        MsgBox "No active inspector found."
+    End If
+End Sub
+
+Private Function GetRdoMessage(Item As Object) As Redemption.RDOMail
+    Dim e$, s$
+
+    If Not Item Is Nothing Then
+        e = Item.EntryID
+        If Not Item.Parent Is Nothing Then
+            s = Item.Parent.StoreID
+        End If
+        If Len(e) Then
+            If Len(s) Then
+                Set GetRdoMessage = m_Session.GetMessageFromID(e, s)
+            Else
+                Set GetRdoMessage = m_Session.GetMessageFromID(e)
+            End If
+        End If
+    End If
+End Function
