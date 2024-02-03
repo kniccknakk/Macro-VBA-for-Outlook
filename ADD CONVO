@@ -1,0 +1,44 @@
+#THIS IS NOT MY INTELLECTUAL PROPERTY; THIS WAS FOUND PUBLICALLY ON THE INTERNET AND IS JUST STORED HERE FOR ARCHIVING PURPOSES; FURTHERMORE, I DON'T THINK THIS FUNCTION EVEN WORKS
+
+Sub AddToConversation()
+
+On Error GoTo ErrHnd:
+
+        Dim oNS As Object
+        Dim oRDOSess As Object
+        Dim oRDOItem As Object
+        Dim sEntryID As String
+        Dim sStoreID As String
+        Dim lNumMsgs As Long
+
+        Set oRDOSess = CreateObject("Redemption.RDOSession")
+        Set oNS = Nothing
+        Set oNS = Outlook.GetNamespace("MAPI")
+        oNS.Logon
+        oRDOSess.MAPIOBJECT = oNS.MAPIOBJECT
+        lNumMsgs = Outlook.ActiveExplorer.Selection.Count
+
+        If lNumMsgs < 2 Then
+                MsgBox ("To add messages to a conversation, first select a message then select the target conversation and run this macro.")
+                GoTo ErrHnd:
+        End If
+        For i = 1 To (lNumMsgs - 1)
+                With Outlook.ActiveExplorer.Selection(i)
+                        strEntryID = .EntryID
+                        strStoreID = .Parent.StoreID
+                End With
+                Set objRDOItem = oRDOSess.GetMessageFromID(strEntryID, strStoreID)
+                objRDOItem.ConversationTopic = Outlook.ActiveExplorer.Selection.Item(lNumMsgs).ConversationTopic
+                objRDOItem.Save
+        Next i
+
+ErrHnd:
+
+        Set oNS = Nothing
+        Set oRDOSess = Nothing
+        Set objRDOItem = Nothing
+        Set strEntryID = Nothing
+        Set strStoreID = Nothing
+        lNumMsgs = 0
+
+End Sub
